@@ -1,0 +1,13 @@
+server:
+  port: 8761  # Устанавливаем порт для eureka-server (стандартно 8761)
+
+eureka:
+  client:
+    register-with-eureka: false  # Не регистрировать eureka-server как клиента самого в себе
+    fetch-registry: false        # Не загружать реестр сервисов (он сам этот реестр и хранит)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # Открываем все actuator-эндпоинты (например, /actuator/health, /actuator/info)

@@ -33,9 +33,6 @@ spring:
 
   # Настройки Spring Cloud Stream для работы с Kafka
   cloud:
-    config:
-      discovery:
-        enabled: false  # Отключаем поиск config-server через Eureka (мы указываем URI вручную)
     stream:
       binders:
         kafka:  # Название binder'а

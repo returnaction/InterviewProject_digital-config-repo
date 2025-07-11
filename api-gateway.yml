@@ -13,4 +13,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: "*"  # или: "health,info,env" если хочешь выборочно
+        include: "*" # или: "health,info,env" если хочешь выборочно 
+  endpoint:
+    gateway:
+      enabled: true  # 👈 важно: включает /actuator/gateway/*

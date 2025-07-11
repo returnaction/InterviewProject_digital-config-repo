@@ -1,0 +1,10 @@
+server:
+  port: 8080                # Устанавливаем порт, на котором будет работать api-gateway
+
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true         # Включаем автоматическое создание маршрутов на основе Eureka
+          lower-case-service-id: true   # Названия сервисов будут в нижнем регистре (удобнее для URL)

@@ -34,3 +34,7 @@ management:
   endpoint:
     gateway:
       enabled: true  # Включаем специальные маршруты gateway, например /actuator/gateway/routes
+  # ⬇⬇⬇ ВАЖНО: этот блок необходим для Spring Boot 3.1+
+  web:
+    exposure:
+      include: "*"

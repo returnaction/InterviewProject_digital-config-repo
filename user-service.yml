@@ -86,6 +86,5 @@ management:
 # ========================
 eureka:
   instance:
-    prefer-ip-address: true
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}  
     # Уникальный идентификатор конкретного инстанса user-service (для масштабируемости и различения)

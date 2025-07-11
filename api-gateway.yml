@@ -20,7 +20,7 @@ spring:
       discovery:
         locator:
           enabled: false  # ❌ Отключаем автоматическую маршрутизацию на основе Eureka
-          lower-case-service-id: true
+          #lower-case-service-id: true
 
 # ================================
 # Настройки Spring Boot Actuator

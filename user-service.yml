@@ -2,73 +2,89 @@
 # Настройка HTTP-сервера
 # ========================
 server:
-  port: 8081  # user-service будет запущен на http://localhost:8081
+  port: 8081  # Порт, на котором будет запущен user-service (http://localhost:8081)
 
 # ========================
 # Основные настройки Spring Boot
 # ========================
 spring:
   application:
-    name: user-service  # Имя сервиса (для Eureka, Kafka, Config Server и маршрутизации через Gateway)
+    name: user-service  # Имя сервиса. Используется для Eureka, Kafka, Config Server, Gateway (роутинг)
 
+  # ========================
   # Настройки подключения к базе данных PostgreSQL
+  # ========================
   datasource:
-    url: jdbc:postgresql://localhost:5432/interviewproject_user_service
-    username: postgres
-    password: postgres
+    url: jdbc:postgresql://localhost:5432/interviewproject_user_service  # URL к БД PostgreSQL
+    username: postgres     # Имя пользователя БД
+    password: postgres     # Пароль пользователя БД
 
-  # Настройки JPA (Hibernate)
+  # ========================
+  # Конфигурация JPA (Hibernate)
+  # ========================
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: update  # Автоматическое обновление схемы БД при запуске (только для разработки)
+    show-sql: true       # Показывать SQL-запросы в консоли
     properties:
       hibernate:
-        format_sql: true
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true  # Форматировать SQL для читаемости
+    database-platform: org.hibernate.dialect.PostgreSQLDialect  # Указываем диалект PostgreSQL
 
-  # Настройки Kafka (если используешь напрямую)
+  # ========================
+  # Конфигурация Kafka напрямую (если используешь native Kafka)
+  # ========================
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:9092  # Адрес Kafka-брокера
     consumer:
-      group-id: user-group
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      group-id: user-group             # Идентификатор consumer-группы
+      auto-offset-reset: earliest     # Читать с самого начала, если offset не найден
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # Десериализация ключа
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer  # Десериализация значения
 
-  # Spring Cloud Stream + Kafka
+  # ========================
+  # Конфигурация Spring Cloud Stream для работы с Kafka через абстракции
+  # ========================
   cloud:
     stream:
       binders:
-        kafka:
+        kafka:  # Название Kafka-биндера (ссылаемся в bindings)
           type: kafka
           environment:
             spring:
               kafka:
-                bootstrap-servers: localhost:9092
+                bootstrap-servers: localhost:9092  # Адрес Kafka-брокера
+
       bindings:
+        # === Producer: отправка события UserCreatedEvent ===
         userCreated-out-0:
-          destination: user-created-topic
-          content-type: application/json
-          binder: kafka
+          destination: user-created-topic       # Название Kafka-топика для отправки
+          content-type: application/json        # Формат сообщений
+          binder: kafka                         # Используемый binder (см. выше)
+
+        # === Consumer: приём события из Kafka ===
         userCreated-in-0:
-          destination: user-created-topic
-          group: user-group
+          destination: user-created-topic       # Название Kafka-топика для получения
+          group: user-group                     # Группа consumer'ов
           content-type: application/json
           binder: kafka
 
-# Настройки Actuator
+# ========================
+# Конфигурация Spring Boot Actuator (для мониторинга, метрик и health-check)
+# ========================
 management:
   endpoints:
     web:
       exposure:
-        include: "*"
+        include: "*"         # Включаем все эндпоинты actuator: /actuator/health, /actuator/env и т.д.
   endpoint:
     health:
-      show-details: always
+      show-details: always   # Показываем подробности в /actuator/health (например, статус БД, Kafka и т.д.)
 
-# Настройки Eureka
+# ========================
+# Конфигурация Eureka Discovery Client
+# ========================
 eureka:
   instance:
-    # Уникальный ID инстанса (нужно для масштабирования)
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}  
+    # Уникальный идентификатор конкретного инстанса user-service (для масштабируемости и различения)

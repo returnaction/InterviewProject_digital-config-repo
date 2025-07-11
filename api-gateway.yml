@@ -8,3 +8,9 @@ spring:
         locator:
           enabled: true         # Включаем автоматическое создание маршрутов на основе Eureka
           lower-case-service-id: true   # Названия сервисов будут в нижнем регистре (удобнее для URL)
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # или: "health,info,env" если хочешь выборочно

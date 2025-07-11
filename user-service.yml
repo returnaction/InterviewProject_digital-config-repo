@@ -1,64 +1,87 @@
-# Настройка HTTP-сервера (встроенный Tomcat)
+# ========================
+# Настройка HTTP-сервера
+# ========================
 server:
-  port: 8081  # user-service будет запущен на http://localhost:8081
+  port: 8081  # Порт, на котором будет работать user-service (http://localhost:8081)
 
+# ========================
+# Основные настройки Spring Boot
+# ========================
 spring:
   application:
-    name: user-service  # Имя сервиса. Используется для Eureka, Spring Cloud Config, Kafka и т.д.
+    name: user-service  # Имя сервиса (для Eureka, Kafka, Config Server и маршрутизации через Gateway)
 
   # Настройки подключения к базе данных PostgreSQL
   datasource:
-    url: jdbc:postgresql://localhost:5432/interviewproject_user_service  # JDBC-URL для PostgreSQL
-    username: postgres    # Имя пользователя
-    password: postgres    # Пароль
+    url: jdbc:postgresql://localhost:5432/interviewproject_user_service  # Адрес базы данных
+    username: postgres  # Логин PostgreSQL
+    password: postgres  # Пароль PostgreSQL
 
-  # Конфигурация JPA (Hibernate)
+  # Настройки JPA (Hibernate)
   jpa:
     hibernate:
-      ddl-auto: update    # Автоматическое обновление схемы БД (только для разработки)
-    show-sql: true        # Показывать SQL-запросы в консоли
+      ddl-auto: update  # Автоматически обновлять схему БД при старте (удобно в dev)
+    show-sql: true  # Показывать SQL-запросы в консоли
     properties:
       hibernate:
-        format_sql: true  # Форматировать SQL-запросы
+        format_sql: true  # Форматировать SQL для читаемости
     database-platform: org.hibernate.dialect.PostgreSQLDialect  # Диалект для PostgreSQL
 
-  # Настройки Kafka (если используешь напрямую, без Cloud Stream)
+  # ========================
+  # Kafka (если используешь напрямую, не через Cloud Stream)
+  # ========================
   kafka:
-    bootstrap-servers: localhost:9092  # Адрес брокера Kafka
+    bootstrap-servers: localhost:9092  # Адрес Kafka-брокера
     consumer:
-      group-id: user-group             # Идентификатор группы consumer'ов
-      auto-offset-reset: earliest      # Читать с самого начала, если нет offset
+      group-id: user-group  # Группа Consumer'ов
+      auto-offset-reset: earliest  # Читать с самого начала при отсутствии offset
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
-  # Настройки Spring Cloud Stream для работы с Kafka
+  # ========================
+  # Spring Cloud Stream (для взаимодействия с Kafka через абстракции)
+  # ========================
   cloud:
     stream:
       binders:
-        kafka:  # Название binder'а
-          type: kafka  # Тип binder'а (Kafka)
+        kafka:  # Название Kafka-биндера
+          type: kafka
           environment:
             spring:
               kafka:
-                bootstrap-servers: localhost:9092  # Адрес Kafka-брокера
-      bindings:
-        userCreated-out-0:  # Канал для отправки сообщений
-          destination: user-created-topic  # Название Kafka-топика
-          content-type: application/json   # Сериализация в JSON
-          binder: kafka                    # Используем binder с названием kafka
+                bootstrap-servers: localhost:9092  # Адрес Kafka для binder'а
 
-        userCreated-in-0:  # Канал для получения сообщений (Consumer)
+      bindings:
+        # Producer: отправка события UserCreatedEvent
+        userCreated-out-0:
           destination: user-created-topic  # Kafka-топик
-          group: user-group                # Группа Consumer'ов
           content-type: application/json
           binder: kafka
 
-# Настройки Spring Boot Actuator (метрики, состояние и т.д.)
+        # Consumer: приём события из Kafka
+        userCreated-in-0:
+          destination: user-created-topic
+          group: user-group
+          content-type: application/json
+          binder: kafka
+
+# ========================
+# Spring Boot Actuator
+# ========================
 management:
   endpoints:
     web:
       exposure:
-        include: "*"  # Включаем все endpoints, например: /actuator/health, /actuator/metrics
+        include: "*"  # Включаем все actuator endpoints: /actuator/health, /actuator/env и т.д.
   endpoint:
     health:
-      show-details: always  # Показывать подробности статуса (например, статус подключения к Kafka и БД)
+      show-details: always  # Показывать детали в /actuator/health (например, состояние БД, Kafka)
+
+# ========================
+# Eureka Discovery Client
+# ========================
+eureka:
+  instance:
+    appname: user-service  # Имя сервиса в Eureka (должно совпадать с lower-case-service-id в Gateway)
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}  
+    # Уникальный идентификатор инстанса (важно при масштабировании — чтобы не конфликтовали)

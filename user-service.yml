@@ -85,6 +85,10 @@ management:
 # Конфигурация Eureka Discovery Client
 # ========================
 eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    enabled: true
   instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}  
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
     # Уникальный идентификатор конкретного инстанса user-service (для масштабируемости и различения)
